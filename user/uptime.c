@@ -5,7 +5,7 @@
 int main(int argc, char *argv[]){
 int count=0;
 count=atoi(argv[1]);
-sleep(count);
+count=uptime();
 printf("[%d] clock ticks\n", count);
 exit(0);
 }
