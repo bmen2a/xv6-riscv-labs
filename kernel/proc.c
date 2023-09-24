@@ -429,46 +429,40 @@ wait(uint64 addr)
 
 //Added wait1 for Hw2
 int
-waitx(int *wtime,int *rtime)
+wait1(int *wtime,int *rtime)
 {
-  struct proc *p;
-  int havekids, pid;
+   // Record the start time before forking
+     wtime = uptime();
 
-  acquire(&ptable.lock);
-  for(;;){
-    // Scan through table looking for zombie children.
-    havekids = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != proc)
-        continue;
-      havekids = 1;
-      if(p->state == ZOMBIE){
-        // Found one.
-        *wtime= p->etime - p->ctime1 - p->rtime - p->iotime;
-        *rtime=p->rtime;
-        pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        freevm(p->pgdir);
-        p->state = UNUSED;
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
-        release(&ptable.lock);
-        return pid;
-      }
+    int pid = fork();
+    if (pid < 0) {
+        printf(2, "Fork failed\n");
+        exit();
+    } else if (pid == 0) { // Child process
+        // Execute the specified command in the child process
+        exec(argv[1], argv + 1);
+        // If exec fails, print an error message and exit
+        printf(2, "Exec failed\n");
+        exit();
+    } else { // Parent process
+        int status;
+        int child_pid = wait(&status); // Wait for the child to exit
+
+        // Check if wait failed or the child process was killed
+        if (child_pid == -1 || (status & 0xFF) != 0) {
+            printf(2, "Child process terminated abnormally\n");
+            exit();
+        }
+
+        // Record the end time after the child process exits
+        rtime = uptime();
+
+        // Calculate and print the elapsed time in milliseconds
+        uint64 elapsed_time = rtime - wtime;
+        printf(1, "Elapsed time: %d ms\n", (int)elapsed_time);
+
+        exit();
     }
-
-    // No point waiting if we don't have any children.
-    if(!havekids || proc->killed){
-      release(&ptable.lock);
-      return -1;
-    }
-
-    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    sleep(proc, &ptable.lock);  //DOC: wait-sleep
-  }
 }
 
 // Per-CPU process scheduler.
