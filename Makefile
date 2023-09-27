@@ -126,13 +126,16 @@ UPROGS=\
 	$U/_ls\
 	$U/_mkdir\
 	$U/_rm\
-	$U/_sh\
+	$U/_uptime\
 	$U/_stressfs\
 	$U/_usertests\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
 	$U/_uptime\
+	$U/_time\
+	$U/_matmul\
+
 
 
 fs.img: mkfs/mkfs README $(UPROGS)

@@ -24,8 +24,8 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 //added for hw2
-int wait1(int *wtime, int *rtime);
-
+int time(void);
+int matmul(void);
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
