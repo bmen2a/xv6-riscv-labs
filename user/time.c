@@ -2,6 +2,7 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 #include "kernel/pstat.h"
+#include "kernel/param.h"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]) {
 
         // Calculate and print the time difference
         printf("Time taken: %d ticks\n", elapsed_time);
-        printf("elapsed time: %d ticks, cpu time: %d ticks, %d%% CPU\n", elapsed_time, cpu_time, cpu_usage);
+        printf("Elapsed time: %d ticks, cpu time: %d ticks, %d%% CPU\n", elapsed_time, cpu_time, cpu_usage);
     }
     exit(0);
 }

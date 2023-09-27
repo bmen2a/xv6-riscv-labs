@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "pstat.h"
 
 uint64
 sys_exit(void)
@@ -49,9 +50,9 @@ sys_wait2(void)
     int *cputime=(int*)cput;
     
     // Call the wait2() function to wait for a child process and retrieve status and cputime
-  int ret = wait2(stat, cputime);
+  return wait2(stat, cputime);
   
-  return ret;
+
 }
 
 

@@ -13,14 +13,6 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
-struct pstat{
- int inuse[NPROC];
-    int pid[NPROC];
-    int status[NPROC];
-    int cutime[NPROC];
-    int cstime[NPROC];
-};
-
 int nextpid = 1;
 struct spinlock pid_lock;
 
@@ -118,6 +110,9 @@ allocproc(void)
   for(p = proc; p < &proc[NPROC]; p++) {
     acquire(&p->lock);
     if(p->state == UNUSED) {
+    
+     p->cputime= 0;   //Modified for Hw2
+     
       goto found;
     } else {
       release(&p->lock);
@@ -128,7 +123,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-  p->cputime= 0;   //Modified for Hw2
+ 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
     freeproc(p);
@@ -435,13 +430,15 @@ wait(uint64 addr)
     sleep(p, &wait_lock);  //DOC: wait-sleep
   }
 }
-
+ //Modified for HW2
+ 
 int
 wait2(struct pstat *stat, int *cputime)
 {
   struct proc *np;
   int havekids, pid;
   struct proc *p = myproc();
+  
 
   acquire(&wait_lock);
 
@@ -457,14 +454,16 @@ wait2(struct pstat *stat, int *cputime)
         if(np->state == ZOMBIE){
           // Found one.
           pid = np->pid;
-
+	
           // Collect the child's status and cputime
           if (stat != 0) {
-            stat->inuse[pid] = 0;
+           /* stat->inuse[pid] = 0;
             stat->pid[pid] = pid;
             stat->status[pid] = np->xstate;
             stat->cutime[pid] = np->cputime;
-            stat->cstime[pid] = 0; // You can set this to 0 or other appropriate values
+            stat->cstime[pid] = 0; 
+            */
+            //stat->cutime[pid] = np->cputime;
           }
 
           if(cputime != 0)
