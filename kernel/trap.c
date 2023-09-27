@@ -44,9 +44,9 @@ usertrap(void)
   // send interrupts and exceptions to kerneltrap(),
   // since we're now in the kernel.
   w_stvec((uint64)kernelvec);
-
-  struct proc *p = myproc();
   
+  struct proc *p = myproc();
+  p->cputime++;
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
