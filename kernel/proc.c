@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "defs.h"
 
+
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -427,43 +428,6 @@ wait(uint64 addr)
   }
 }
 
-//Added wait1 for Hw2
-int
-wait1(int *wtime,int *rtime)
-{
-   // Record the start time before forking
-     wtime = uptime();
-
-    int pid = fork();
-    if (pid < 0) {
-        printf(2, "Fork failed\n");
-        exit();
-    } else if (pid == 0) { // Child process
-        // Execute the specified command in the child process
-        exec(argv[1], argv + 1);
-        // If exec fails, print an error message and exit
-        printf(2, "Exec failed\n");
-        exit();
-    } else { // Parent process
-        int status;
-        int child_pid = wait(&status); // Wait for the child to exit
-
-        // Check if wait failed or the child process was killed
-        if (child_pid == -1 || (status & 0xFF) != 0) {
-            printf(2, "Child process terminated abnormally\n");
-            exit();
-        }
-
-        // Record the end time after the child process exits
-        rtime = uptime();
-
-        // Calculate and print the elapsed time in milliseconds
-        uint64 elapsed_time = rtime - wtime;
-        printf(1, "Elapsed time: %d ms\n", (int)elapsed_time);
-
-        exit();
-    }
-}
 
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
