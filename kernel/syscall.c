@@ -104,6 +104,7 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+//Modified for HW2
 extern uint64 sys_wait2(void);
 
 static uint64 (*syscalls[])(void) = {
@@ -128,6 +129,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+//modified for HW2
 [SYS_wait2]   sys_wait2,
 };
 
