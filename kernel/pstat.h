@@ -1,0 +1,1 @@
+struct rusage {uint cputime;};

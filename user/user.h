@@ -1,5 +1,6 @@
 struct stat;
 struct rtcdate;
+struct rusage;
 
 // system calls
 int fork(void);
@@ -26,6 +27,8 @@ int uptime(void);
 //added for hw2
 int time(void);
 int matmul(void);
+int wait2(int*, struct rusage*);
+
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
