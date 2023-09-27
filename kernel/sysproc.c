@@ -37,6 +37,24 @@ sys_wait(void)
     return -1;
   return wait(p);
 }
+//Modified for HW2
+uint64
+sys_wait2(void)
+{
+  uint64 p, cput;
+  if(argaddr(0, &p) < 0 || argaddr(1, &cput)<0){
+    return -1;
+    }
+    struct pstat *stat=(struct pstat*)p;
+    int *cputime=(int*)cput;
+    
+    // Call the wait2() function to wait for a child process and retrieve status and cputime
+  int ret = wait2(stat, cputime);
+  
+  return ret;
+}
+
+
 
 uint64
 sys_sbrk(void)

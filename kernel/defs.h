@@ -1,3 +1,4 @@
+
 struct buf;
 struct context;
 struct file;
@@ -8,6 +9,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct pstat;
 
 // bio.c
 void            binit(void);
@@ -99,7 +101,7 @@ void            sched(void);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
 int             wait(uint64);
-int		wait2(int *, int *); //Modified for Hw2
+int		wait2(struct pstat*, int *); //Modified for Hw2
 void            wakeup(void*);
 void            yield(void);
 int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);

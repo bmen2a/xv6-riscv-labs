@@ -5,13 +5,21 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
-#include <pstat.h>
+#include "pstat.h"
 
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
 
 struct proc *initproc;
+
+struct pstat{
+ int inuse[NPROC];
+    int pid[NPROC];
+    int status[NPROC];
+    int cutime[NPROC];
+    int cstime[NPROC];
+};
 
 int nextpid = 1;
 struct spinlock pid_lock;
@@ -427,6 +435,61 @@ wait(uint64 addr)
     sleep(p, &wait_lock);  //DOC: wait-sleep
   }
 }
+
+int
+wait2(struct pstat *stat, int *cputime)
+{
+  struct proc *np;
+  int havekids, pid;
+  struct proc *p = myproc();
+
+  acquire(&wait_lock);
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(np = proc; np < &proc[NPROC]; np++){
+      if(np->parent == p){
+        // make sure the child isn't still in exit() or swtch().
+        acquire(&np->lock);
+
+        havekids = 1;
+        if(np->state == ZOMBIE){
+          // Found one.
+          pid = np->pid;
+
+          // Collect the child's status and cputime
+          if (stat != 0) {
+            stat->inuse[pid] = 0;
+            stat->pid[pid] = pid;
+            stat->status[pid] = np->xstate;
+            stat->cutime[pid] = np->cputime;
+            stat->cstime[pid] = 0; // You can set this to 0 or other appropriate values
+          }
+
+          if(cputime != 0)
+            *cputime = np->cputime; // Return cputime
+
+          freeproc(np);
+          release(&np->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&np->lock);
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || p->killed){
+      release(&wait_lock);
+      return -1;
+    }
+    
+    // Wait for a child to exit.
+    sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
+}
+
 
 
 // Per-CPU process scheduler.

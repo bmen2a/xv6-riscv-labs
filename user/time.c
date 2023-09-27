@@ -2,6 +2,7 @@
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
+#include "kernel/pstat.h"
 
 int main(int argc, char *argv[]){
  if (argc < 2) {
@@ -25,13 +26,39 @@ int main(int argc, char *argv[]){
     } else {
         // This is the parent process
         int status;
-        wait(&status);
+        struct pstat *stat;
+        
+        // Allocate memory for stat
+        
+        stat = (struct pstat *)malloc(sizeof(struct pstat));
+
+        if (stat == NULL) {
+            printf("Failed to allocate memory for stat\n");
+            exit(1);
+        }
+        
+        //// Initialize stat structure
+        memset(&stat, 0, sizeof(struct pstat));
+        
+        wait2(&stat, &status);
+	
+	     
 
         // Get the current time after child process has finished
         int end_time = uptime();
-
+         // Calculate elapsed time
+        int elapsed_time = end_time - start_time;   
+        
+	int cpu_time = stat.cutime[pid] + stat.cstime[pid];
+        int cpu_usage = (cpu_time * 100) / elapsed_time;
+	
         // Calculate and print the time difference
-        printf( "Time taken: %d ticks\n", end_time - start_time);
+        printf( "Time taken: %d ticks\n", elapsed_time);
+       printf("elapsed time: %d ticks, cpu time: %d ticks, %d%% CPU\n", elapsed_time, cpu_time, cpu_usage);
+       
+       // Free the allocated memory
+       free(stat);
+
     }
     exit(0);
 }
