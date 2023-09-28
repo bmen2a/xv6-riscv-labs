@@ -39,6 +39,7 @@ sys_wait(void)
   return wait(p);
 }
 //Modified for HW2
+
 uint64
 sys_wait2(void)
 {
@@ -50,10 +51,14 @@ sys_wait2(void)
     int *cputime=(int*)cput;
     
     // Call the wait2() function to wait for a child process and retrieve status and cputime
-  return wait2(stat, cputime);
-  
-
+  int pid=wait2(cputime, stat);
+  if(pid<0){
+  return -1;
+  }
+  return (uint64)pid;
 }
+
+
 
 
 

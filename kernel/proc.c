@@ -13,6 +13,7 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
+
 int nextpid = 1;
 struct spinlock pid_lock;
 
@@ -155,11 +156,9 @@ static void
 freeproc(struct proc *p)
 {
   if(p->trapframe)
-    kfree((void*)p->trapframe);
-  p->trapframe = 0;
+  	p->trapframe = 0;
   if(p->pagetable)
-    proc_freepagetable(p->pagetable, p->sz);
-  p->pagetable = 0;
+	proc_freepagetable(p->pagetable, p->sz);
   p->sz = 0;
   p->pid = 0;
   p->parent = 0;
@@ -433,7 +432,7 @@ wait(uint64 addr)
  //Modified for HW2
  
 int
-wait2(struct pstat *stat, int *cputime)
+wait2(int *cputime, struct pstat *stat)
 {
   struct proc *np;
   int havekids, pid;
@@ -457,13 +456,8 @@ wait2(struct pstat *stat, int *cputime)
 	
           // Collect the child's status and cputime
           if (stat != 0) {
-           /* stat->inuse[pid] = 0;
-            stat->pid[pid] = pid;
-            stat->status[pid] = np->xstate;
-            stat->cutime[pid] = np->cputime;
-            stat->cstime[pid] = 0; 
-            */
-            //stat->cutime[pid] = np->cputime;
+            
+           stat->cputime[pid] = np->cputime;
           }
 
           if(cputime != 0)
@@ -488,6 +482,8 @@ wait2(struct pstat *stat, int *cputime)
     sleep(p, &wait_lock);  //DOC: wait-sleep
   }
 }
+
+
 
 
 
