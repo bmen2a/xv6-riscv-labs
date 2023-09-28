@@ -404,6 +404,8 @@ wait(uint64 addr)
         if(np->state == ZOMBIE){
           // Found one.
           pid = np->pid;
+         // ru.cputime = np->cputime
+          //wati(0) wait(&status)
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&np->xstate,
                                   sizeof(np->xstate)) < 0) {
             release(&np->lock);
@@ -432,12 +434,12 @@ wait(uint64 addr)
  //Modified for HW2
  
 int
-wait2(int *cputime, struct pstat *stat)
+wait2(uint64 cputime, uint64 stat)
 {
   struct proc *np;
   int havekids, pid;
   struct proc *p = myproc();
-  
+  struct rusage rus;
 
   acquire(&wait_lock);
 
@@ -453,15 +455,27 @@ wait2(int *cputime, struct pstat *stat)
         if(np->state == ZOMBIE){
           // Found one.
           pid = np->pid;
+          
 	
           // Collect the child's status and cputime
-          if (stat != 0) {
-            
-           stat->cputime[pid] = np->cputime;
+          
+           
+           rus.cputime = np->cputime;
+          
+           if(cputime != 0 && copyout(p->pagetable, cputime, (char *)&np->xstate,
+                                  sizeof(np->xstate)) < 0) {
+            release(&np->lock);
+            release(&wait_lock);
+            return -1;
+          }
+           if(stat != 0 && copyout(p->pagetable, stat, (char *)&rus,
+                                  sizeof(rus)) < 0) {
+            release(&np->lock);
+            release(&wait_lock);
+            return -1;
           }
 
-          if(cputime != 0)
-            *cputime = np->cputime; // Return cputime
+     
 
           freeproc(np);
           release(&np->lock);

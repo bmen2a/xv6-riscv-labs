@@ -43,19 +43,10 @@ sys_wait(void)
 uint64
 sys_wait2(void)
 {
-  uint64 p, cput;
-  if(argaddr(0, &p) < 0 || argaddr(1, &cput)<0){
+  uint64 p, p2;
+  if(argaddr(0, &p) < 0 || argaddr(1, &p2) < 0 )
     return -1;
-    }
-    struct pstat *stat=(struct pstat*)p;
-    int *cputime=(int*)cput;
-    
-    // Call the wait2() function to wait for a child process and retrieve status and cputime
-  int pid=wait2(cputime, stat);
-  if(pid<0){
-  return -1;
-  }
-  return (uint64)pid;
+  return wait2(p, p2);
 }
 
 
