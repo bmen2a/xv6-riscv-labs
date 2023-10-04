@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "pstat.h"
 #include "defs.h"
+#include "limits.h"
 
 struct cpu cpus[NCPU];
 
@@ -435,17 +436,57 @@ wait(uint64 addr)
 //  - swtch to start running that process.
 //  - eventually that process transfers control
 //    via swtch back to the scheduler.
+/*
 void
 scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
-  
+  c->proc = 0;
+  int min_priority = INT_MAX; // highest priority value
+  for(;;) {
+    // Avoid deadlock by ensuring that devices can interrupt.
+    intr_on();
+    // Find process with highest priority
+    acquire(&ptable.lock);
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (p->state != RUNNABLE)
+        continue;
+      if (p->priority < min_priority)
+        min_priority = p->priority;
+    }
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (p->state != RUNNABLE || p->priority > min_priority)
+        continue;
+      // Switch to chosen process.
+      c->proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+      p->ticks[p->curq]++;
+      p->n_run++;
+      swtch(&c->scheduler, &p->context);
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      switchkvm();
+      c->proc = 0;
+      min_priority = INT_MAX; // reset priority
+      break;
+    }
+    release(&ptable.lock);
+  }
+}
+*/
+void
+scheduler(void)
+{
+  struct proc *p;
+  struct cpu *c = mycpu();
   c->proc = 0;
   for(;;){
     // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
-
+	
+    
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
@@ -464,6 +505,7 @@ scheduler(void)
     }
   }
 }
+
 
 // Switch to scheduler.  Must hold only p->lock
 // and have changed proc->state. Saves and restores
