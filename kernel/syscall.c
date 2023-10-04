@@ -108,6 +108,9 @@ extern uint64 sys_getprocs(void);
 extern uint64 sys_getpriority(void);
 extern uint64 sys_setpriority(void);
 
+//Modified for HW2
+extern uint64 sys_wait2(void);
+
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -133,6 +136,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_getprocs]   sys_getprocs,
 [SYS_getpriority]  sys_getpriority,
 [SYS_setpriority]  sys_setpriority,
+//modified for HW2
+[SYS_wait2]   sys_wait2,
 };
 
 void

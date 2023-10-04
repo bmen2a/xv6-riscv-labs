@@ -7,6 +7,7 @@
 #include "pstat.h"
 #include "defs.h"
 #include "limits.h"
+#include "date.h"
 
 struct cpu cpus[NCPU];
 
@@ -476,6 +477,72 @@ scheduler(void)
   }
 }
 */
+ 
+int
+wait2(uint64 cputime, uint64 stat)
+{
+  struct proc *np;
+  int havekids, pid;
+  struct proc *p = myproc();
+  struct rusage rus;
+
+  acquire(&wait_lock);
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(np = proc; np < &proc[NPROC]; np++){
+      if(np->parent == p){
+        // make sure the child isn't still in exit() or swtch().
+        acquire(&np->lock);
+
+        havekids = 1;
+        if(np->state == ZOMBIE){
+          // Found one.
+          pid = np->pid;
+          
+	
+          // Collect the child's status and cputime
+          
+           
+           rus.cputime = np->cputime;
+          
+           if(cputime != 0 && copyout(p->pagetable, cputime, (char *)&np->xstate,
+                                  sizeof(np->xstate)) < 0) {
+            release(&np->lock);
+            release(&wait_lock);
+            return -1;
+          }
+           if(stat != 0 && copyout(p->pagetable, stat, (char *)&rus,
+                                  sizeof(rus)) < 0) {
+            release(&np->lock);
+            release(&wait_lock);
+            return -1;
+          }
+
+     
+
+          freeproc(np);
+          release(&np->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&np->lock);
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || p->killed){
+      release(&wait_lock);
+      return -1;
+    }
+    
+    // Wait for a child to exit.
+    sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
+}
+
+
 void
 scheduler(void)
 {
@@ -490,9 +557,12 @@ scheduler(void)
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
+      if (p->state != RUNNING) {
+          struct rtcdate r;
+          
+          p->readytime = r.second; // Store the current time in seconds
+        }
+        
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);

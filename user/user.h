@@ -25,6 +25,10 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int getprocs(struct pstat*);
+//added for hw2
+int time(void);
+int matmul(void);
+int wait2( int *,struct rusage*);
 
 // ulib.c
 int stat(const char*, struct stat*);

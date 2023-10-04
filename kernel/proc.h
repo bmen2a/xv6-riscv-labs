@@ -79,7 +79,7 @@ struct trapframe {
   /* 272 */ uint64 t5;
   /* 280 */ uint64 t6;
 };
-
+ //enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE }; //Modified for hW2
 // Per-process state
 struct proc {
   struct spinlock lock;
@@ -91,6 +91,7 @@ struct proc {
   int xstate;                  // Exit status to be returned to parent's wait
   int pid;                     // Process ID
   int priority;    //Process Priority and HW3
+  int readytime;   //Time at which process became ready {HW3}
   // wait_lock must be held when using this:
   struct proc *parent;         // Parent process
 
@@ -103,4 +104,5 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  int cputime;			//Cpu Time added for Hw2
 };

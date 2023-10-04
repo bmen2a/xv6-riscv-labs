@@ -100,31 +100,8 @@ sys_uptime(void)
 
 // return the number of active processes in the system
 // fill in user-provided data structure with pid,state,sz,ppid,name
-/*
-uint64
-sys_getpriority(void)
-{
-    int pid;
-    if (argint(0, &pid) < 0)
-        return -1;
 
-    struct proc *p = myproc(); // Get the current process
 
-    // Acquire the lock for the current process to ensure consistency
-    acquire(&p->lock);
-
-    // Check if the current process has the given PID
-    if (p->pid == pid) {
-        int priority = p->priority;
-        release(&p->lock);  // Release the lock before returning
-        return priority;
-    }
-
-    // Process with the given PID not found
-    release(&p->lock);  // Release the lock if the process was not a match
-    return -1;  // Error code (process not found)
-}
-*/
 uint64
 sys_getpriority(void)
 {
