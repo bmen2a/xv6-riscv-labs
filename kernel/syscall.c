@@ -104,12 +104,12 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
-<<<<<<< HEAD
+
 extern uint64 sys_getprocs(void);
-=======
+
 //Modified for HW2
 extern uint64 sys_wait2(void);
->>>>>>> hw2
+
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -133,12 +133,12 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-<<<<<<< HEAD
+
 [SYS_getprocs]   sys_getprocs,
-=======
+
 //modified for HW2
 [SYS_wait2]   sys_wait2,
->>>>>>> hw2
+
 };
 
 void
