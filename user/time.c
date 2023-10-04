@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
         int elapsed_time = end_time - start_time;
 
         int cpu_time = rusage.cputime;
-        int cpu_usage = (cpu_time / elapsed_time) * 100;
+        int cpu_usage = (cpu_time *100) / elapsed_time;
 
         // Calculate and print the time difference
         printf("Time taken: %d ticks\n", elapsed_time);
