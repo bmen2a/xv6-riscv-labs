@@ -6,12 +6,14 @@
 #include "proc.h"
 #include "pstat.h"
 #include "defs.h"
+#include "pstat.h"
 
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
 
 struct proc *initproc;
+
 
 int nextpid = 1;
 struct spinlock pid_lock;
@@ -106,10 +108,13 @@ static struct proc*
 allocproc(void)
 {
   struct proc *p;
-
+	
   for(p = proc; p < &proc[NPROC]; p++) {
     acquire(&p->lock);
     if(p->state == UNUSED) {
+    
+     p->cputime= 0;   //Modified for Hw2
+     
       goto found;
     } else {
       release(&p->lock);
@@ -120,7 +125,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-
+ 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
     freeproc(p);
@@ -152,11 +157,9 @@ static void
 freeproc(struct proc *p)
 {
   if(p->trapframe)
-    kfree((void*)p->trapframe);
-  p->trapframe = 0;
+  	p->trapframe = 0;
   if(p->pagetable)
-    proc_freepagetable(p->pagetable, p->sz);
-  p->pagetable = 0;
+	proc_freepagetable(p->pagetable, p->sz);
   p->sz = 0;
   p->pid = 0;
   p->parent = 0;
@@ -402,6 +405,8 @@ wait(uint64 addr)
         if(np->state == ZOMBIE){
           // Found one.
           pid = np->pid;
+         // ru.cputime = np->cputime
+          //wati(0) wait(&status)
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&np->xstate,
                                   sizeof(np->xstate)) < 0) {
             release(&np->lock);
@@ -427,6 +432,75 @@ wait(uint64 addr)
     sleep(p, &wait_lock);  //DOC: wait-sleep
   }
 }
+ //Modified for HW2
+ 
+int
+wait2(uint64 cputime, uint64 stat)
+{
+  struct proc *np;
+  int havekids, pid;
+  struct proc *p = myproc();
+  struct rusage rus;
+
+  acquire(&wait_lock);
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(np = proc; np < &proc[NPROC]; np++){
+      if(np->parent == p){
+        // make sure the child isn't still in exit() or swtch().
+        acquire(&np->lock);
+
+        havekids = 1;
+        if(np->state == ZOMBIE){
+          // Found one.
+          pid = np->pid;
+          
+	
+          // Collect the child's status and cputime
+          
+           
+           rus.cputime = np->cputime;
+          
+           if(cputime != 0 && copyout(p->pagetable, cputime, (char *)&np->xstate,
+                                  sizeof(np->xstate)) < 0) {
+            release(&np->lock);
+            release(&wait_lock);
+            return -1;
+          }
+           if(stat != 0 && copyout(p->pagetable, stat, (char *)&rus,
+                                  sizeof(rus)) < 0) {
+            release(&np->lock);
+            release(&wait_lock);
+            return -1;
+          }
+
+     
+
+          freeproc(np);
+          release(&np->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&np->lock);
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || p->killed){
+      release(&wait_lock);
+      return -1;
+    }
+    
+    // Wait for a child to exit.
+    sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
+}
+
+
+
+
 
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.

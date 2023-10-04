@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 struct pstat {
   int pid;     // Process ID
   enum procstate state;  // Process state
@@ -5,3 +6,6 @@ struct pstat {
   int ppid;        // Parent process ID
   char name[16];   // Parent command name
 };
+=======
+struct rusage {uint cputime;};
+>>>>>>> hw2

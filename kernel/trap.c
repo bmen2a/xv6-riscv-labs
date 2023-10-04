@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "pstat.h"
 
 struct spinlock tickslock;
 uint ticks;
@@ -44,9 +45,9 @@ usertrap(void)
   // send interrupts and exceptions to kerneltrap(),
   // since we're now in the kernel.
   w_stvec((uint64)kernelvec);
-
-  struct proc *p = myproc();
   
+  struct proc *p = myproc();
+  p->cputime++;   //Modified for HW2
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
