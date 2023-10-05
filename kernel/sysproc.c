@@ -98,6 +98,15 @@ sys_uptime(void)
   return xticks;
 }
 
+
+uint64
+sys_wait2(void)
+{
+  uint64 p, p2;
+  if(argaddr(0, &p) < 0 || argaddr(1, &p2) < 0 )
+    return -1;
+  return wait2(p, p2);
+}
 // return the number of active processes in the system
 // fill in user-provided data structure with pid,state,sz,ppid,name
 

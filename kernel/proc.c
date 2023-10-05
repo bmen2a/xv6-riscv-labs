@@ -558,10 +558,10 @@ scheduler(void)
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
       if (p->state != RUNNING) {
-          struct rtcdate r;
-           r.second=r_time(); // Get the current time
+         
+          // r.second=sys_uptime; // Get the current time
 
-          p->readytime = r.second; // Store the current time in seconds
+          p->readytime = sys_uptime(); // Store the current time in seconds
         }
         
         p->state = RUNNING;
@@ -785,6 +785,7 @@ procinfo(uint64 addr)
     procinfo.pid = p->pid;
     procinfo.state = p->state;
     procinfo.size = p->sz;
+   // procinfo.readytome= p->
     if (p->parent)
       procinfo.ppid = (p->parent)->pid;
     else
