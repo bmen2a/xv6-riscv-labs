@@ -132,7 +132,7 @@ sys_setpriority(void)
   p->priority = newPriority;
 
   // Return the new priority as a success indicator
-  return newPriority;
+  return 0;
 }
 
 

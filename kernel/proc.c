@@ -559,7 +559,8 @@ scheduler(void)
       if(p->state == RUNNABLE) {
       if (p->state != RUNNING) {
           struct rtcdate r;
-          
+           r.second=r_time(); // Get the current time
+
           p->readytime = r.second; // Store the current time in seconds
         }
         
