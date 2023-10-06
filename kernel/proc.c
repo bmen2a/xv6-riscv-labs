@@ -549,31 +549,37 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  for(;;){
+
+  for(;;) {
     // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
-	
-    
+
+    struct proc *highest_priority_proc = 0; // Initialize to NULL initially
+
     for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
+      //acquire(&p->lock);
       if(p->state == RUNNABLE) {
-      if (p->state != RUNNING) {
-         
-          // r.second=sys_uptime; // Get the current time
-
-          p->readytime = sys_uptime(); // Store the current time in seconds
+        if (p->state != RUNNING) {
+          // Store the current time in seconds when the process becomes runnable
+          p->readytime = sys_uptime();
         }
-        
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
 
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
+        // Check if this process has a higher priority than the current highest priority process
+        if (highest_priority_proc == 0 || p->priority > highest_priority_proc->priority) {
+          highest_priority_proc = p;
+        }
       }
-      release(&p->lock);
+      //release(&p->lock);
     }
+
+    // Run the highest priority process if one is found
+    if (highest_priority_proc != 0) {
+      highest_priority_proc->state = RUNNING;
+      c->proc = highest_priority_proc;
+      swtch(&c->context, &highest_priority_proc->context);
+      c->proc = 0;
+    }
+    //release(&p->lock);
   }
 }
 
@@ -785,7 +791,8 @@ procinfo(uint64 addr)
     procinfo.pid = p->pid;
     procinfo.state = p->state;
     procinfo.size = p->sz;
-   // procinfo.readytome= p->
+   procinfo.readytime= p->readytime;
+   procinfo.cputime=p->cputime;
     if (p->parent)
       procinfo.ppid = (p->parent)->pid;
     else

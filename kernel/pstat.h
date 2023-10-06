@@ -6,5 +6,6 @@ struct pstat {
   char name[16];   // Parent command name
   int priority;
   int readytime;
+  uint cputime;
 };
 struct rusage {uint cputime;};
