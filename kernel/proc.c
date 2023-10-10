@@ -543,47 +543,46 @@ wait2(uint64 cputime, uint64 stat)
 }
 
 
-void
-scheduler(void)
-{
-  struct proc *p;
-  struct cpu *c = mycpu();
-  c->proc = 0;
+void scheduler(void) {
+    struct proc *p;
+    struct cpu *c = mycpu();
+    c->proc = 0;
 
-  for (;;) {
-    // Avoid deadlock by ensuring that devices can interrupt.
-    intr_on();
+    for (;;) {
+        // Avoid deadlock by ensuring that devices can interrupt.
+        intr_on();
 
-    struct proc *highest_priority_proc = 0; // Initialize to NULL initially
+        struct proc *highest_priority_proc = 0; // Initialize to NULL initially
 
-    for (p = proc; p < &proc[NPROC]; p++) {
-        acquire(&p->lock);
-        if (p->state == RUNNABLE) {
-            // Store the current time in seconds when the process becomes runnable
-            if (p->state != RUNNING) {
-                p->readytime = sys_uptime();
+        for (p = proc; p < &proc[NPROC]; p++) {
+            acquire(&p->lock);
+
+            if (p->state == RUNNABLE) {
+                // Store the current time in seconds when the process becomes runnable
+                if (p->state != RUNNING) {
+                    p->readytime = sys_uptime();
+                }
+
+                // Check if this process has a higher priority than the current highest priority process
+                if (highest_priority_proc == 0 || p->priority > highest_priority_proc->priority) {
+                    highest_priority_proc = p;
+                }
             }
 
-            // Check if this process has a higher priority than the current highest priority process
-            if (highest_priority_proc == 0 || p->priority > highest_priority_proc->priority) {
-                highest_priority_proc = p;
-            }
-
-            // Update the state of the process to RUNNING before releasing the lock
-            p->state = RUNNING;
+            release(&p->lock);
         }
-        release(&p->lock);
+
+        // Run the highest priority process if one is found
+        if (highest_priority_proc != 0) {
+            acquire(&highest_priority_proc->lock); // Acquire the lock of the selected process
+            c->proc = highest_priority_proc;
+            swtch(&c->context, &highest_priority_proc->context);
+            c->proc = 0;
+            release(&highest_priority_proc->lock); // Release the lock when done
+        }
     }
-
-    // Run the highest priority process if one is found
-    if (highest_priority_proc != 0) {
-        c->proc = highest_priority_proc;
-        swtch(&c->context, &highest_priority_proc->context);
-        c->proc = 0;
-    	}
 }
 
-}
 
 
 // Switch to scheduler.  Must hold only p->lock
