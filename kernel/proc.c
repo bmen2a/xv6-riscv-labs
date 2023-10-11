@@ -8,6 +8,9 @@
 #include "defs.h"
 #include "limits.h"
 #include "date.h"
+#define MAXEFFPRIORITY 99
+
+//effective_priority = min(MAXEFFPRIORITY, priority + (currtime -readytime))
 
 struct cpu cpus[NCPU];
 
@@ -437,46 +440,6 @@ wait(uint64 addr)
 //  - swtch to start running that process.
 //  - eventually that process transfers control
 //    via swtch back to the scheduler.
-/*
-void
-scheduler(void)
-{
-  struct proc *p;
-  struct cpu *c = mycpu();
-  c->proc = 0;
-  int min_priority = INT_MAX; // highest priority value
-  for(;;) {
-    // Avoid deadlock by ensuring that devices can interrupt.
-    intr_on();
-    // Find process with highest priority
-    acquire(&ptable.lock);
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if (p->state != RUNNABLE)
-        continue;
-      if (p->priority < min_priority)
-        min_priority = p->priority;
-    }
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if (p->state != RUNNABLE || p->priority > min_priority)
-        continue;
-      // Switch to chosen process.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      p->ticks[p->curq]++;
-      p->n_run++;
-      swtch(&c->scheduler, &p->context);
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      switchkvm();
-      c->proc = 0;
-      min_priority = INT_MAX; // reset priority
-      break;
-    }
-    release(&ptable.lock);
-  }
-}
-*/
  
 int
 wait2(uint64 cputime, uint64 stat)
@@ -566,6 +529,14 @@ void scheduler(void) {
                 // Check if this process has a higher priority than the current highest priority process
                 if (highest_priority_proc == 0 || p->priority > highest_priority_proc->priority) {
                     highest_priority_proc = p;
+                }
+
+                // Implement aging: Increase priority if a process has been waiting for a while
+                if (p != highest_priority_proc) {
+                    int age = sys_uptime() - p->readytime;
+                    if (age >= MAXEFFPRIORITY ) {
+                        p->priority++; // Increase the priority
+                    }
                 }
             }
 
