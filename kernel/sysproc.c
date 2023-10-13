@@ -8,6 +8,7 @@
 #include "proc.h"
 #include "pstat.h"
 #include "limits.h"
+#define MAXEFFPRIORITY 99
 
 uint64
 sys_exit(void)
@@ -137,11 +138,21 @@ sys_setpriority(void)
 
   struct proc *p = myproc();
 
-  // Set the process's new priority
-  p->priority = newPriority;
+  // Lock the process to ensure safe modification of the priority
+    acquire(&p->lock);
 
-  // Return the new priority as a success indicator
-  return 0;
+    // Validate newPriority
+    if (newPriority < 0 || newPriority > MAXEFFPRIORITY) {
+        release(&p->lock); // Release the lock before returning
+        return -1; // Invalid priority value
+    }
+
+    // Set the process's new priority
+    p->priority = newPriority;
+
+    // Release the lock and return 0 as a success indicator
+    release(&p->lock);
+  return 0; //succes
 }
 
 

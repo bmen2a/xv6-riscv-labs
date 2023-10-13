@@ -30,8 +30,10 @@ int getprocs(struct pstat*);
 int time(void);
 int matmul(void);
 int wait2( int *,struct rusage*);
-//int setprioirity()
-//int getpriority()
+//Modified for HW3
+int setpriority(int);
+int getpriority(void);
+
 
 // ulib.c
 int stat(const char*, struct stat*);
