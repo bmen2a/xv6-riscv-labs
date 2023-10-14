@@ -532,20 +532,21 @@ void scheduler(void) {
                 int effective_priority = (p->priority + (sys_uptime() - p->readytime));
 		if (effective_priority > MAXEFFPRIORITY) {
     			effective_priority = MAXEFFPRIORITY;
+    			
 		}
 
                 // Check if this process has a higher priority than the current highest priority process
-                if (highest_priority_proc == 0 || effective_priority > highest_priority_proc->priority) {
+                if (highest_priority_proc == 0 || effective_priority > (highest_priority_proc->priority + (sys_uptime() - highest_priority_proc->readytime))) {
                     highest_priority_proc = p;
                 }
 
                 // Implement aging: Increase priority if a process has been waiting for a while
-                if (p != highest_priority_proc) {
+                
                     int age = sys_uptime() - p->readytime;
                     if (age >= MAXEFFPRIORITY) {
                         p->priority++; // Increase the priority
                     }
-                }
+                
             }
 
             release(&p->lock);
@@ -772,6 +773,7 @@ procinfo(uint64 addr)
     procinfo.size = p->sz;
    procinfo.readytime= p->readytime;
    procinfo.cputime=p->cputime;
+   procinfo.priority=p->priority;
     if (p->parent)
       procinfo.ppid = (p->parent)->pid;
     else
