@@ -8,6 +8,8 @@
 #include "defs.h"
 #include "limits.h"
 #include "date.h"
+#include <math.h>
+
 #define MAXEFFPRIORITY 99
 
 //effective_priority = min(MAXEFFPRIORITY, priority + (currtime -readytime))
@@ -525,16 +527,22 @@ void scheduler(void) {
                 if (p->state != RUNNING) {
                     p->readytime = sys_uptime();
                 }
+                
+                // Calculate effective priority
+                int effective_priority = (p->priority + (sys_uptime() - p->readytime));
+		if (effective_priority > MAXEFFPRIORITY) {
+    			effective_priority = MAXEFFPRIORITY;
+		}
 
                 // Check if this process has a higher priority than the current highest priority process
-                if (highest_priority_proc == 0 || p->priority > highest_priority_proc->priority) {
+                if (highest_priority_proc == 0 || effective_priority > highest_priority_proc->priority) {
                     highest_priority_proc = p;
                 }
 
                 // Implement aging: Increase priority if a process has been waiting for a while
                 if (p != highest_priority_proc) {
                     int age = sys_uptime() - p->readytime;
-                    if (age >= MAXEFFPRIORITY ) {
+                    if (age >= MAXEFFPRIORITY) {
                         p->priority++; // Increase the priority
                     }
                 }
@@ -553,7 +561,6 @@ void scheduler(void) {
         }
     }
 }
-
 
 
 // Switch to scheduler.  Must hold only p->lock

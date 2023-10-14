@@ -136,22 +136,22 @@ sys_setpriority(void)
   if (argint(0, &newPriority) < 0)
     return -1;
 
-  struct proc *p = myproc();
-
+  
+	
   // Lock the process to ensure safe modification of the priority
-    acquire(&p->lock);
+   // acquire(&p->lock);
 
     // Validate newPriority
     if (newPriority < 0 || newPriority > MAXEFFPRIORITY) {
-        release(&p->lock); // Release the lock before returning
+       // release(&p->lock); // Release the lock before returning
         return -1; // Invalid priority value
     }
 
     // Set the process's new priority
-    p->priority = newPriority;
+    myproc()->priority=newPriority;
 
     // Release the lock and return 0 as a success indicator
-    release(&p->lock);
+    //release(&p->lock);
   return 0; //succes
 }
 

@@ -40,4 +40,3 @@ entry("getprocs");
 entry("wait2");
 entry("setpriority");
 entry("getpriority ");
-
