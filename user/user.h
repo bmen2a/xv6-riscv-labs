@@ -33,7 +33,8 @@ int wait2( int *,struct rusage*);
 //Modified for HW3
 int setpriority(int);
 int getpriority(void);
-
+//Modifired for HW4
+uint64 freepmem(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

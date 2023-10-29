@@ -154,6 +154,33 @@ sys_setpriority(void)
     //release(&p->lock);
   return 0; //succes
 }
+//Modified for HW4
 
+uint64 sys_freepmem(void)
+{
+  int n;
+    struct proc *curproc = myproc();  // Get the current process
+
+   
+    // Read the number of pages to free from the user
+    if (argint(0, &n) < 0)
+        return -1;  // Invalid argument
+
+    // Perform the memory freeing logic
+    for (int i = 0; i < n; i++) {
+        char *mem = kalloc();  // Allocate a page of physical memory
+        if (mem == 0)
+            return -1;  // Out of memory
+
+        // Fill with junk and free the page (as in kfree)
+        memset(mem, 1, PGSIZE);
+
+        
+        ((struct run*)mem)->next = kmem.freelist;
+        kmem.freelist = (struct run*)mem;
+    }
+
+    return 0;  // Success
+}
 
 

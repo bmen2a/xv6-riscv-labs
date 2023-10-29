@@ -111,6 +111,9 @@ extern uint64 sys_setpriority(void);
 //Modified for HW2
 extern uint64 sys_wait2(void);
 
+//Modified for HW4
+extern uint64 freepmem(void);
+
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -138,6 +141,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_setpriority]  sys_setpriority,
 //modified for HW2
 [SYS_wait2]   sys_wait2,
+//Modifired for HW4
+[SYS_freepmem]   sys_freepmem,
 };
 
 void
