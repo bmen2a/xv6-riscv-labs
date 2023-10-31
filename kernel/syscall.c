@@ -112,7 +112,7 @@ extern uint64 sys_setpriority(void);
 extern uint64 sys_wait2(void);
 
 //Modified for HW4
-extern uint64 freepmem(void);
+extern uint64 sys_freepmem(void);
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,

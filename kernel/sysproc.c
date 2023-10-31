@@ -50,6 +50,7 @@ sys_sbrk(void)
   if(argint(0, &n) < 0)
     return -1;
   addr = myproc()->sz;
+  //TODO implement size+n use if statement to calidate, check if its less than trampoline, highest address, myproc=size+n return old address
   if(growproc(n) < 0)
     return -1;
   return addr;
@@ -158,29 +159,10 @@ sys_setpriority(void)
 
 uint64 sys_freepmem(void)
 {
-  int n;
-    struct proc *curproc = myproc();  // Get the current process
-
-   
-    // Read the number of pages to free from the user
-    if (argint(0, &n) < 0)
-        return -1;  // Invalid argument
-
-    // Perform the memory freeing logic
-    for (int i = 0; i < n; i++) {
-        char *mem = kalloc();  // Allocate a page of physical memory
-        if (mem == 0)
-            return -1;  // Out of memory
-
-        // Fill with junk and free the page (as in kfree)
-        memset(mem, 1, PGSIZE);
-
-        
-        ((struct run*)mem)->next = kmem.freelist;
-        kmem.freelist = (struct run*)mem;
-    }
-
-    return 0;  // Success
+//TODO call countPage and then multiply by 4096
+  int pages=countPage();
+  
+  return pages*4096;
 }
 
 

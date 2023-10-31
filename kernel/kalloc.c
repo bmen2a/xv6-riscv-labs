@@ -80,3 +80,23 @@ kalloc(void)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
 }
+//TODO implement new method to count bytes
+//how to implement in sysproc.c
+
+int countPage(void){
+  struct run *r;
+  int counter=0;
+
+  acquire(&kmem.lock);
+  r = kmem.freelist;
+  if(r){
+    kmem.freelist = r->next;
+    counter++;
+    }
+  release(&kmem.lock);
+
+  if(r)
+    memset((char*)r, 5, PGSIZE); // fill with junk
+  return counter;
+
+}
