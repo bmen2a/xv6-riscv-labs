@@ -89,14 +89,12 @@ int countPage(void){
 
   acquire(&kmem.lock);
   r = kmem.freelist;
-  if(r){
+  while(r){
     kmem.freelist = r->next;
     counter++;
     }
   release(&kmem.lock);
 
-  if(r)
-    memset((char*)r, 5, PGSIZE); // fill with junk
   return counter;
 
 }
