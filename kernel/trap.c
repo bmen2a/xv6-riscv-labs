@@ -51,6 +51,9 @@ usertrap(void)
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
+  //TODO add if statement
+  //affter allokcating a physical memory frame, clear contents of the page
+  //mappages(p->pagetable,virtual addres or stval, page size, newly allocated physical grame addr, you got this from kalloc(), PERMS R/W/X/U)
   if(r_scause() == 8){
     // system call
 

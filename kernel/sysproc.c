@@ -10,6 +10,7 @@
 #include "limits.h"
 #define MAXEFFPRIORITY 99
 
+
 uint64
 sys_exit(void)
 {
@@ -46,13 +47,16 @@ sys_sbrk(void)
 {
   int addr;
   int n;
+  int newsz;
 
   if(argint(0, &n) < 0)
     return -1;
   addr = myproc()->sz;
-  //TODO implement size+n use if statement to calidate, check if its less than trampoline, highest address, myproc=size+n return old address
-  if(growproc(n) < 0)
-    return -1;
+  //TODO implement size+n use if statement to validate, check if its less than trampoline, highest address, myproc=size+n return old address
+  newsz=addr+n;
+  if(!(newsz < TRAPFRAME)){
+  return -1;
+  }
   return addr;
 }
 
@@ -159,7 +163,6 @@ sys_setpriority(void)
 
 uint64 sys_freepmem(void)
 {
-//TODO call countPage and then multiply by 4096
   int pages=countPage();
   
   return pages*4096;
