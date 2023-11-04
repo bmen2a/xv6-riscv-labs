@@ -38,6 +38,7 @@ void
 usertrap(void)
 {
   int which_dev = 0;
+  int newzsz=myproc()->sz;
 
   if((r_sstatus() & SSTATUS_SPP) != 0)
     panic("usertrap: not from user mode");
@@ -54,6 +55,11 @@ usertrap(void)
   //TODO add if statement
   //affter allokcating a physical memory frame, clear contents of the page
   //mappages(p->pagetable,virtual addres or stval, page size, newly allocated physical grame addr, you got this from kalloc(), PERMS R/W/X/U)
+  if(r_scause() == 13 || r_scause() == 15 ){
+  	if(r_stval() <newsz){
+  	
+  	}
+  }
   if(r_scause() == 8){
     // system call
 

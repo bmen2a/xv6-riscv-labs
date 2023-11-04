@@ -52,7 +52,6 @@ sys_sbrk(void)
   if(argint(0, &n) < 0)
     return -1;
   addr = myproc()->sz;
-  //TODO implement size+n use if statement to validate, check if its less than trampoline, highest address, myproc=size+n return old address
   newsz=addr+n;
   if(!(newsz < TRAPFRAME)){
   return -1;
