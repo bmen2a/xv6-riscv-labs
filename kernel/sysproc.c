@@ -56,6 +56,7 @@ sys_sbrk(void)
   if(!(newsz < TRAPFRAME)){
   return -1;
   }
+   myproc()->sz=newsz;
   return addr;
 }
 

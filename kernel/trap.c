@@ -52,25 +52,8 @@ usertrap(void)
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
-  //TODO add if statement
-  //affter allokcating a physical memory frame, clear contents of the page
-  //mappages(p->pagetable,virtual addres or stval, page size, newly allocated physical grame addr, you got this from kalloc(), PERMS R/W/X/U)
-  if(r_scause() == 13 || r_scause() == 15 ){
-  	if(r_stval() <newsz){
-  	// Handle load or store fault
-        char* mem = kalloc();  // Allocate a physical memory frame
-        if (mem != 0) {
-            // Calculate the virtual page address containing the faulting address
-            uint64 faulting_addr = r_stval();
-            uint64 virtual_page = PGROUNDDOWN(faulting_addr);
-            
-            // Install the page table mapping
-            if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
-                kfree(mem); // Free the physical memory frame in case of an error
-            }
-        }
-  	}
-  }
+  
+  
   if(r_scause() == 8){
     // system call
 
@@ -86,9 +69,31 @@ usertrap(void)
     intr_on();
 
     syscall();
-  } else if((which_dev = devintr()) != 0){
+    
+    //TODO add if statement
+  //affter allokcating a physical memory frame, clear contents of the page
+  //mappages(p->pagetable,virtual addres or stval, page size, newly allocated physical grame addr, you got this from kalloc(), PERMS R/W/X/U)
+  }else if(r_scause() == 13 || r_scause() == 15 ){
+  	if(r_stval() < newsz){
+  	// Handle load or store fault
+        char* mem = kalloc();  // Allocate a physical memory frame
+        if (mem != 0) {
+            // Calculate the virtual page address containing the faulting address
+            uint64 faulting_addr = r_stval();
+            uint64 virtual_page = PGROUNDDOWN(faulting_addr);
+            
+            // Install the page table mapping
+            if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
+                kfree(mem); // Free the physical memory frame in case of an error
+        	    	}
+        	}
+  	}
+  } 
+  else if((which_dev = devintr()) != 0){
     // ok
-  } else {
+    
+  } 
+  else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
     p->killed = 1;
