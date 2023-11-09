@@ -83,15 +83,11 @@ usertrap(void)
          if (mem == 0) {
             // Handle allocation failure, e.g., by returning an error or killing the process
             printf("Out of physical memory\n");
-        }
-        if (mem != 0) {
-            // Install the page table mapping
-            if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
+        }// Install the page table mapping
+         if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
                 kfree(mem); // Free the physical memory frame in case of an error
                  printf("Failed to map pages\n");
-            
-        	    	}
-        	}
+       		} 	
   	}
   } 
   else if((which_dev = devintr()) != 0){
