@@ -141,7 +141,7 @@ UPROGS=\
 	$U/_matmul\
 	$U/_pexec\
 	$U/_free\
-	#$U/_freepmem\
+	
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

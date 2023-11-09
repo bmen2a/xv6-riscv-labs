@@ -70,21 +70,26 @@ usertrap(void)
 
     syscall();
     
-    //TODO add if statement
-  //affter allokcating a physical memory frame, clear contents of the page
+   
+  //affter allocating a physical memory frame, clear contents of the page
   //mappages(p->pagetable,virtual addres or stval, page size, newly allocated physical grame addr, you got this from kalloc(), PERMS R/W/X/U)
   }else if(r_scause() == 13 || r_scause() == 15 ){
   	if(r_stval() < newsz){
   	// Handle load or store fault
-        char* mem = kalloc();  // Allocate a physical memory frame
-        if (mem != 0) {
-            // Calculate the virtual page address containing the faulting address
+  	// Calculate the virtual page address containing the faulting address
             uint64 faulting_addr = r_stval();
             uint64 virtual_page = PGROUNDDOWN(faulting_addr);
-            
+        char* mem = kalloc();  // Allocate a physical memory frame
+         if (mem == 0) {
+            // Handle allocation failure, e.g., by returning an error or killing the process
+            printf("Out of physical memory\n");
+        }
+        if (mem != 0) {
             // Install the page table mapping
             if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
                 kfree(mem); // Free the physical memory frame in case of an error
+                 printf("Failed to map pages\n");
+            
         	    	}
         	}
   	}
