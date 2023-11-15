@@ -15,6 +15,29 @@ extern char etext[];  // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
 
+//Modified for HW5
+// Allocate page table pages for PTEs if needed but leave valid bits unchanged
+int
+mapvpages(pagetable_t pagetable, uint64 va, uint64 size)
+{
+ uint64 a, last;
+ pte_t *pte;
+ if(size == 0)
+ panic("mappages: size");
+ a = PGROUNDDOWN(va);
+ last = PGROUNDDOWN(va + size - 1);
+ for(;;){
+ if((pte = walk(pagetable, a, 1)) == 0)
+ return -1;
+ if(*pte & PTE_V)
+ panic("mappages: remap");
+ if(a == last)
+ break;
+ a += PGSIZE;
+ }
+ return 0;
+}
+
 // Make a direct-map page table for the kernel.
 pagetable_t
 kvmmake(void)
@@ -311,12 +334,12 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
     if((pte = walk(old, i, 0)) == 0)
      panic("uvmcopy: pte should exist");
     if((*pte & PTE_V) == 0)
-    //panic("uvmcopy: page not present");
+    	panic("uvmcopy: page not present");
    pa = PTE2PA(*pte);
    flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)
       goto err;
-    memmove(mem, (void*)pa, PGSIZE);
+    memmove(mem, (char*)pa, PGSIZE);
     if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
       kfree(mem);
       goto err;

@@ -15,5 +15,7 @@
 // Define scheduling policy constants and HW3
 #define ROUND_ROBIN  0
 #define PRIORITY     1
+#define MAX_MMR 10 // maximum number of memory-mapped regions per process
+
 
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
