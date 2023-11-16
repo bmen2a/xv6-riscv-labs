@@ -15,28 +15,7 @@ extern char etext[];  // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
 
-//Modified for HW5
-// Allocate page table pages for PTEs if needed but leave valid bits unchanged
-int
-mapvpages(pagetable_t pagetable, uint64 va, uint64 size)
-{
- uint64 a, last;
- pte_t *pte;
- if(size == 0)
- panic("mappages: size");
- a = PGROUNDDOWN(va);
- last = PGROUNDDOWN(va + size - 1);
- for(;;){
- if((pte = walk(pagetable, a, 1)) == 0)
- return -1;
- if(*pte & PTE_V)
- panic("mappages: remap");
- if(a == last)
- break;
- a += PGSIZE;
- }
- return 0;
-}
+
 
 // Make a direct-map page table for the kernel.
 pagetable_t
@@ -120,6 +99,29 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
   return &pagetable[PX(0, va)];
 }
 
+//Modified for HW5
+// Allocate page table pages for PTEs if needed but leave valid bits unchanged
+int
+mapvpages(pagetable_t pagetable, uint64 va, uint64 size)
+{
+ uint64 a, last;
+ pte_t *pte;
+ 	if(size == 0)
+ 		panic("mappages: size");
+ a = PGROUNDDOWN(va);
+ last = PGROUNDDOWN(va + size - 1);
+ for(;;){
+ 	 
+ 	if((pte = walk(pagetable, a, 0)) == 0)
+ 		return -1;
+ 	if(*pte & PTE_V)
+ 		panic("mappages: remap");
+ 	if(a == last)
+ 		break;
+ a += PGSIZE;
+ }
+ return 0;
+}
 // Look up a virtual address, return the physical address,
 // or 0 if not mapped.
 // Can only be used to look up user pages.

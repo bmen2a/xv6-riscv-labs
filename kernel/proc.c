@@ -25,6 +25,8 @@ struct proc *initproc;
 
 int nextpid = 1;
 struct spinlock pid_lock;
+//Modified for HW5
+int cur_max;
 
 extern void forkret(void);
 static void freeproc(struct proc *p);
@@ -302,7 +304,7 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
-  p->cur_max = MAXVA – 2*PGSIZE;
+  p->cur_max = MAXVA - 2 * PGSIZE;
 
   release(&p->lock);
 }

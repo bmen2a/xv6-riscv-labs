@@ -30,7 +30,7 @@ sys_mmap()
  struct mmr *newmmr = 0;
  uint64 start_addr;
  /* Add error checking for length, prot, and flags arguments */
- if (argaddr(1, &length) < 0)
+ if (argaddr(1, &length) < 0 || length <=0)
  return -1;
  if (argint(2, &prot) < 0)
  return -1;
@@ -123,6 +123,15 @@ sys_munmap(void)
  /****
  Your code goes here
  ****/
+ // Get arguments from user space
+    if (argaddr(0, &addr) < 0 || argaddr(1, &length) < 0)
+        return -1;
+
+    // Call munmap helper function
+    int result = munmap(addr, length);
+
+    return result;
+ 
 }
 
 
