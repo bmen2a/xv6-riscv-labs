@@ -109,8 +109,8 @@ void            procdump(void);
 int             procinfo(uint64);
 uint64 		sys_uptime(void);
 //modified for HW5
-int munmap(uint64, uint64 );
-int mmap(void);
+
+
 struct mmr_list* get_mmr_list(int);
 int alloc_mmr_listid(void);
 void dealloc_mmr_listid(int);

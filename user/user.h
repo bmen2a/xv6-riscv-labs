@@ -36,8 +36,8 @@ int getpriority(void);
 //Modifired for HW4
 uint64 freepmem(void);
 //Modified for HW5
-int munmap(uint64, uint64);
-int mmap(void*, uint64 , int, int, int, int);
+int munmap(void*, uint64);
+void *mmap(void*, uint64 , int, int, int, int);
 
 // ulib.c
 int stat(const char*, struct stat*);
