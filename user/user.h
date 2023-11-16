@@ -35,6 +35,7 @@ int setpriority(int);
 int getpriority(void);
 //Modifired for HW4
 uint64 freepmem(void);
+//Modified for HW5
 
 // ulib.c
 int stat(const char*, struct stat*);
