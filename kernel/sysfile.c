@@ -46,7 +46,8 @@ sys_mmap()
  // Fill in struct mmr fields for new mapped region
  if (newmmr) {
  /* Calculate the start address of the new mapped region, make sure it starts on a page boundary */
-start_addr = /**** your code goes here ****/
+	start_addr = PGROUNDUP(p->cur_max); // PGROUNDUP macro rounds up to the nearest page boundary
+/**** your code goes here ****/
  newmmr->valid = 1;
  newmmr->addr = start_addr;
  newmmr->length = p->cur_max - start_addr;
@@ -57,15 +58,15 @@ start_addr = /**** your code goes here ****/
  newmmr->mmr_family.prev = &(newmmr->mmr_family); // prev points to its own mmr_node
  // Allocate page table pages if needed
  if (mapvpages(p->pagetable, newmmr->addr, newmmr->length) < 0) {
- newmmr->valid = 0;
- return -1;
+ 	newmmr->valid = 0;
+ 	return -1;
  }
- if (flags & MAP_SHARED) // start an mmr_list if region is shared
- newmmr->mmr_family.listid = alloc_mmr_listid();
- p->cur_max = start_addr;
- return start_addr;
+ 	if (flags & MAP_SHARED) // start an mmr_list if region is shared
+ 		newmmr->mmr_family.listid = alloc_mmr_listid();
+ 	p->cur_max = start_addr;
+ 	return start_addr;
  } else {
- return -1;
+ 	return -1;
  }
 }
 

@@ -25,3 +25,5 @@
 #define SYS_setpriority 24  
 #define SYS_wait2 25
 #define SYS_freepmem 26
+#define SYS_munmap 27
+#define SYS_mmap 28

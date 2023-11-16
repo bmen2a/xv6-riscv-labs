@@ -114,6 +114,11 @@ extern uint64 sys_wait2(void);
 //Modified for HW4
 extern uint64 sys_freepmem(void);
 
+//Modified for HW5
+extern uint64 sys_munmap(void);
+extern uint64 sys_mmap(void);
+
+
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -143,6 +148,9 @@ static uint64 (*syscalls[])(void) = {
 [SYS_wait2]   sys_wait2,
 //Modifired for HW4
 [SYS_freepmem]   sys_freepmem,
+//Modified for HW5
+[SYS_freepmem]   sys_munmap,
+[SYS_freepmem]   sys_mmap,
 };
 
 void

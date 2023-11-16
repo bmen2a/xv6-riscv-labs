@@ -41,3 +41,5 @@ entry("wait2");
 entry("setpriority");
 entry("getpriority");
 entry("freepmem");
+entry("munmap");
+entry("mmap");
