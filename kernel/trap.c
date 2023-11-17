@@ -38,9 +38,9 @@ void
 usertrap(void)
 {
   int which_dev = 0;
-  int newsz=myproc()->sz;
+  int newsz = myproc()->sz;
 
-  if((r_sstatus() & SSTATUS_SPP) != 0)
+  if ((r_sstatus() & SSTATUS_SPP) != 0)
     panic("usertrap: not from user mode");
 
   // send interrupts and exceptions to kerneltrap(),
@@ -48,16 +48,14 @@ usertrap(void)
   w_stvec((uint64)kernelvec);
 
   struct proc *p = myproc();
-   p->cputime++;   //Modified for HW2
+  p->cputime++;   // Modified for HW2
   // save user program counter.
   p->trapframe->epc = r_sepc();
-  
-  
-  
-  if(r_scause() == 8){
+
+  if (r_scause() == 8) {
     // system call
 
-    if(p->killed)
+    if (p->killed)
       exit(-1);
 
     // sepc points to the ecall instruction,
@@ -69,42 +67,57 @@ usertrap(void)
     intr_on();
 
     syscall();
-    
-   
-  //affter allocating a physical memory frame, clear contents of the page
-  //mappages(p->pagetable,virtual addres or stval, page size, newly allocated physical grame addr, you got this from kalloc(), PERMS R/W/X/U)
-  }else if(r_scause() == 13 || r_scause() == 15 ){
-  	if(r_stval() < newsz){
-  	// Handle load or store fault
-  	// Calculate the virtual page address containing the faulting address
-            uint64 faulting_addr = r_stval();
-            uint64 virtual_page = PGROUNDDOWN(faulting_addr);
-        char* mem = kalloc();  // Allocate a physical memory frame
-         if (mem == 0) {
-            // Handle allocation failure, e.g., by returning an error or killing the process
-            printf("Out of physical memory\n");
-        }// Install the page table mapping
-         if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
-                kfree(mem); // Free the physical memory frame in case of an error
-                 printf("Failed to map pages\n");
-       		} 	
-  	}
-  } 
-  else if((which_dev = devintr()) != 0){
+
+    // after allocating a physical memory frame, clear contents of the page
+    // mappages(p->pagetable, virtual address or stval, page size,
+    // newly allocated physical frame addr obtained from kalloc(),
+    // PERMISSIONS R/W/X/U)
+  } else if (r_scause() == 13 || r_scause() == 15) {
+    if (r_stval() < newsz) {
+      // Handle load or store fault
+      // Calculate the virtual page address containing the faulting address
+      uint64 faulting_addr = r_stval();
+      uint64 virtual_page = PGROUNDDOWN(faulting_addr);
+
+      // Acquire the process lock before accessing proc struct fields
+      acquire(&p->lock);
+      char *mem = kalloc();  // Allocate a physical memory frame
+      if (mem == 0) {
+        // Handle allocation failure, e.g., by returning an error or killing the process
+        printf("Out of physical memory\n");
+        p->killed = 1;
+
+        // Release the process lock before exiting
+        release(&p->lock);
+        return;
+      }
+
+      // Install the page table mapping
+      if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
+        // Free the physical memory frame in case of an error
+        kfree(mem);
+        printf("Failed to map pages\n");
+        p->killed = 1;
+      }
+
+      // Release the process lock
+      release(&p->lock);
+    }
+  } else if ((which_dev = devintr()) != 0) {
     // ok
-    
-  } 
-  else {
+    // Release the process lock
+    release(&p->lock);
+  } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
     p->killed = 1;
   }
 
-  if(p->killed)
+  if (p->killed)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if (which_dev == 2)
     yield();
 
   usertrapret();
@@ -157,6 +170,8 @@ usertrapret(void)
 
 // interrupts and exceptions from kernel code go here via kernelvec,
 // on whatever the current kernel stack is.
+// interrupts and exceptions from kernel code go here via kernelvec,
+// on whatever the current kernel stack is.
 void 
 kerneltrap()
 {
@@ -170,10 +185,18 @@ kerneltrap()
   if(intr_get() != 0)
     panic("kerneltrap: interrupts enabled");
 
-  if((which_dev = devintr()) == 0){
-    printf("scause %p\n", scause);
-    printf("sepc=%p stval=%p\n", r_sepc(), r_stval());
-    panic("kerneltrap");
+  // Check for device interrupt
+  if((which_dev = devintr()) == 0) {
+    // Check for page-fault exception (scause value 12)
+    if (scause == 12) {
+      printf("Page-fault exception: sepc=%p stval=%p\n", r_sepc(), r_stval());
+      // Handle the page-fault exception here
+      
+    } else {
+      // Print information about the unexpected scause
+      printf("Unexpected scause: %p sepc=%p stval=%p\n", scause, r_sepc(), r_stval());
+      panic("kerneltrap");
+    }
   }
 
   // give up the CPU if this is a timer interrupt.

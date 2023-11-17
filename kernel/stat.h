@@ -6,7 +6,7 @@
 #define MAP_SHARED 0x01 /* Share changes */
 #define MAP_PRIVATE 0x02 /* Changes are private */
 #define MAP_ANONYMOUS 0x20 /* No associated file */
-#define NULL 0
+//#define NULL 0
 
 
 struct stat {
