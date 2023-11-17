@@ -106,8 +106,12 @@ mapvpages(pagetable_t pagetable, uint64 va, uint64 size)
 {
  uint64 a, last;
  pte_t *pte;
- 	if(size == 0)
+ 	if(size == 0){
+        printf("mapvpages: size is zero. va=%p\n", va);
+
  		panic("mappages: size");
+
+ 		}
  a = PGROUNDDOWN(va);
  last = PGROUNDDOWN(va + size - 1);
  for(;;){
@@ -165,9 +169,11 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
   uint64 a, last;
   pte_t *pte;
 
-  if(size == 0)
+  if(size == 0){
+     printf("mappages: size is zero. va=%p, pa=%p, perm=%x\n", va, pa, perm);
     panic("mappages: size");
   
+  }
   a = PGROUNDDOWN(va);
   last = PGROUNDDOWN(va + size - 1);
   for(;;){

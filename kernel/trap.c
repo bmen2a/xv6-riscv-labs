@@ -80,17 +80,19 @@ usertrap(void)
       uint64 virtual_page = PGROUNDDOWN(faulting_addr);
 
       // Acquire the process lock before accessing proc struct fields
-      acquire(&p->lock);
+      //acquire(&p->lock);
       char *mem = kalloc();  // Allocate a physical memory frame
+      //memset(mem, 0, PGSIZE);
       if (mem == 0) {
         // Handle allocation failure, e.g., by returning an error or killing the process
         printf("Out of physical memory\n");
         p->killed = 1;
 
         // Release the process lock before exiting
-        release(&p->lock);
+        //release(&p->lock);
         return;
       }
+	virtual_page = PGROUNDDOWN(faulting_addr);
 
       // Install the page table mapping
       if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
@@ -98,15 +100,16 @@ usertrap(void)
         kfree(mem);
         printf("Failed to map pages\n");
         p->killed = 1;
+        return;
       }
 
       // Release the process lock
-      release(&p->lock);
+      //release(&p->lock);
     }
   } else if ((which_dev = devintr()) != 0) {
     // ok
     // Release the process lock
-    release(&p->lock);
+    //release(&p->lock);
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());

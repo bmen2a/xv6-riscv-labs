@@ -149,8 +149,8 @@ static uint64 (*syscalls[])(void) = {
 //Modifired for HW4
 [SYS_freepmem]   sys_freepmem,
 //Modified for HW5
-[SYS_freepmem]   sys_munmap,
-[SYS_freepmem]   sys_mmap,
+[SYS_munmap]   sys_munmap,
+[SYS_mmap]   sys_mmap,
 };
 
 void
