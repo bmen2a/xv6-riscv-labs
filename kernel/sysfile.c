@@ -46,8 +46,7 @@ sys_mmap()
  // Fill in struct mmr fields for new mapped region
  if (newmmr) {
  /* Calculate the start address of the new mapped region, make sure it starts on a page boundary */
-	start_addr = PGROUNDUP(p->cur_max); // PGROUNDUP macro rounds up to the nearest page boundary
-/**** your code goes here ****/
+ start_addr = PGROUNDDOWN(p->cur_max - length);/**** your code goes here ****/
  newmmr->valid = 1;
  newmmr->addr = start_addr;
  newmmr->length = p->cur_max - start_addr;
@@ -58,18 +57,17 @@ sys_mmap()
  newmmr->mmr_family.prev = &(newmmr->mmr_family); // prev points to its own mmr_node
  // Allocate page table pages if needed
  if (mapvpages(p->pagetable, newmmr->addr, newmmr->length) < 0) {
- 	newmmr->valid = 0;
- 	return -1;
+ newmmr->valid = 0;
+ return -1;
  }
- 	if (flags & MAP_SHARED) // start an mmr_list if region is shared
- 		newmmr->mmr_family.listid = alloc_mmr_listid();
- 	p->cur_max = start_addr;
- 	return start_addr;
+ if (flags & MAP_SHARED) // start an mmr_list if region is shared
+ newmmr->mmr_family.listid = alloc_mmr_listid();
+ p->cur_max = start_addr;
+ return start_addr;
  } else {
- 	return -1;
+ return -1;
  }
 }
-
 // Unmap memory region if it exists
 // Free physical memory if no other process has the region mapped
 int
@@ -94,7 +92,7 @@ munmap(uint64 addr, uint64 length)
  dofree = 1;
  else { // MAP_SHARED
  struct mmr_list *pmmrlist = get_mmr_list(mmr->mmr_family.listid);
-acquire(&pmmrlist->lock);
+ acquire(&pmmrlist->lock);
  if (mmr->mmr_family.next == &(mmr->mmr_family)) { // no other family members
  dofree = 1;
  release(&pmmrlist->lock);
@@ -114,7 +112,6 @@ acquire(&pmmrlist->lock);
  }
  return 0;
 }
-
 // Get arguments and call munmap() helper function
 uint64
 sys_munmap(void)

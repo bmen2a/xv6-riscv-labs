@@ -106,24 +106,22 @@ mapvpages(pagetable_t pagetable, uint64 va, uint64 size)
 {
  uint64 a, last;
  pte_t *pte;
- 	if(size == 0){
-        	printf("mapvpages: size is zero. va=%p\n size=%p\n", va, size);
- 		panic("mappages: size");
- 		}
+ if(size == 0)
+ 	panic("mappages: size");
  a = PGROUNDDOWN(va);
  last = PGROUNDDOWN(va + size - 1);
- for(;;){
- 	 
- 	if((pte = walk(pagetable, a, 1)) == 0)
- 		return -1;
- 	if(*pte & PTE_V)
- 		panic("mappages: remap");
- 	if(a == last)
- 		break;
+ 	for(;;){
+ if((pte = walk(pagetable, a, 1)) == 0)
+ return -1;
+ if(*pte & PTE_V)
+ panic("mappages: remap");
+ if(a == last)
+ break;
  a += PGSIZE;
  }
  return 0;
 }
+
 // Look up a virtual address, return the physical address,
 // or 0 if not mapped.
 // Can only be used to look up user pages.

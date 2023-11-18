@@ -304,7 +304,7 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
-  p->cur_max = MAXVA - 2 * PGSIZE;
+  p->cur_max = MAXVA - (2 * PGSIZE);
 
   release(&p->lock);
 }
