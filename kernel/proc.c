@@ -55,14 +55,14 @@ mmrlistinit(void)
 struct mmr_list*
 get_mmr_list(int listid) {
  acquire(&listid_lock);
- if (listid >=0 && listid < NPROC*MAX_MMR && mmr_list[listid].valid) {
- release(&listid_lock);
- return(&mmr_list[listid]);
- }
- else {
- release(&listid_lock);
- return 0;
- }
+ 	if (listid >=0 && listid < NPROC*MAX_MMR && mmr_list[listid].valid) {
+ 	release(&listid_lock);
+ 	return(&mmr_list[listid]);
+ 	}
+ 	else {
+ 	release(&listid_lock);
+ 	return 0;
+ 	}
 }
 // free up entry in mmr_list array
 void
@@ -76,14 +76,14 @@ int
 alloc_mmr_listid() {
  acquire(&listid_lock);
  int listid = -1;
- for (int i = 0; i < NPROC*MAX_MMR; i++) {
- if (mmr_list[i].valid == 0) {
- mmr_list[i].valid = 1;
- listid = i;
- break;
+ 	for (int i = 0; i < NPROC*MAX_MMR; i++) {
+ 		if (mmr_list[i].valid == 0) {
+ 			mmr_list[i].valid = 1;
+ 			listid = i;
+ 			break;
+ 	}
  }
- }
- release(&listid_lock);
+ 	release(&listid_lock);
  return(listid);
 }
 
@@ -364,7 +364,7 @@ fork(void)
   np->cwd = idup(p->cwd);
 
  // Copy cur_max from parent to child.
-  np->cur_max = cur_max;
+  np->cur_max = p->cur_max;
   
   safestrcpy(np->name, p->name, sizeof(p->name));
 
