@@ -72,7 +72,7 @@ usertrap(void)
     // mappages(p->pagetable, virtual address or stval, page size,
     // newly allocated physical frame addr obtained from kalloc(),
     // PERMISSIONS R/W/X/U)
-  } else if (r_scause() == 13 || r_scause() == 15) {
+  }if (r_scause() == 13 || r_scause() == 15) {
     if (r_stval() < newsz) {
       // Handle load or store fault
       // Calculate the virtual page address containing the faulting address
@@ -86,6 +86,8 @@ usertrap(void)
       if (mem == 0) {
         // Handle allocation failure, e.g., by returning an error or killing the process
         printf("Out of physical memory\n");
+        //printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
+   // printf("Panic:");
         p->killed = 1;
 
         // Release the process lock before exiting

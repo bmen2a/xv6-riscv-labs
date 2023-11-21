@@ -15,6 +15,7 @@
 #include "sleeplock.h"
 #include "file.h"
 #include "fcntl.h"
+//#include "stat.h"
 
 
 
@@ -46,7 +47,7 @@ sys_mmap()
  // Fill in struct mmr fields for new mapped region
  if (newmmr) {
  /* Calculate the start address of the new mapped region, make sure it starts on a page boundary */
- start_addr = PGROUNDDOWN(p->cur_max - length);/**** your code goes here ****/
+ start_addr = PGROUNDDOWN(p->cur_max-length);/**** your code goes here ****/
  newmmr->valid = 1;
  newmmr->addr = start_addr;
  newmmr->length = p->cur_max - start_addr;
@@ -118,18 +119,16 @@ sys_munmap(void)
 {
  uint64 addr;
  uint64 length;
- /****
+ /***
  Your code goes here
- ****/
+ **/
  // Get arguments from user space
     if (argaddr(0, &addr) < 0 || argaddr(1, &length) < 0)
         return -1;
 
     // Call munmap helper function
     int result = munmap(addr, length);
-
     return result;
- 
 }
 
 

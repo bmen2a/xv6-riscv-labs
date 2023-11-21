@@ -58,7 +58,7 @@ main(int argc, char *argv[])
 
     printf("total = %d\n", buffer->total);
 
-    munmap(buffer, sizeof(buffer_t));
+    //munmap(buffer, sizeof(buffer_t));
 
     exit(0);
 }
