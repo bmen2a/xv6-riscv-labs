@@ -1,11 +1,12 @@
 #include "kernel/types.h"
 #include "user/user.h"
 #include "kernel/stat.h"
-#include <stddef.h>
+//#include <stddef.h>
+
 
 #define BSIZE 10
 #define MAX 10
-
+#define NULL 0
 typedef struct {
     int buf[BSIZE];
     int nextin;
@@ -17,7 +18,6 @@ typedef struct {
 
 buffer_t *buffer;
 
-
 void producer()
 {
     while(1) {
@@ -26,6 +26,7 @@ void producer()
 	buffer->num_produced++;
 	buffer->buf[buffer->nextin++] = buffer->num_produced;
 	buffer->nextin %= BSIZE;
+	
     }
 }
 
@@ -58,7 +59,7 @@ main(int argc, char *argv[])
 
     printf("total = %d\n", buffer->total);
 
-    //munmap(buffer, sizeof(buffer_t));
+    munmap(buffer, sizeof(buffer_t));
 
     exit(0);
 }
