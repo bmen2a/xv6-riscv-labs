@@ -77,7 +77,7 @@ usertrap(void)
     	 // Invalid address, handle the error
         printf("Invalid address\n");
         p->killed = 1;
-        return;
+        exit(-1);
     }
       // Handle load or store fault
       // Calculate the virtual page address containing the faulting address
@@ -102,7 +102,7 @@ usertrap(void)
 
         // Release the process lock before exiting
         //release(&p->lock);
-        return;
+        exit(-1);
       }
 	
 
@@ -112,13 +112,13 @@ if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PT
     kfree(mem);
     printf("Failed to map pages\n");
     p->killed = 1;
-    return;
+        exit(-1);
 }
 
 } else{
 	printf("Invalid permissions\n");
             p->killed = 1;
-         	   return;
+        exit(-1);
 		}
       // Release the process lock
       //release(&p->lock);
