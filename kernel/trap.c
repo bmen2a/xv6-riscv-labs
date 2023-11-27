@@ -73,7 +73,12 @@ usertrap(void)
     // newly allocated physical frame addr obtained from kalloc(),
     // PERMISSIONS R/W/X/U)
   }else if (r_scause() == 13 || r_scause() == 15) {
-    if (r_stval() < newsz) {
+    if (r_stval() >= newsz) {
+    	 // Invalid address, handle the error
+        printf("Invalid address\n");
+        p->killed = 1;
+        return;
+    }
       // Handle load or store fault
       // Calculate the virtual page address containing the faulting address
       uint64 faulting_addr = r_stval();
@@ -85,7 +90,7 @@ usertrap(void)
 	struct mmr  *region = &p->mmr[i];
 	
 	if (region->valid && virtual_page >= region->addr  && virtual_page < (region->addr + region-> length)) {
-	          if ((r_scause() == 13 && (region->flags & PTE_R)) || (r_scause() == 15 && (region->flags  & PTE_W))) {
+	          if ((r_scause() == 13 && (region->flags & region->prot)) || (r_scause() == 15 && (region->flags  & region->prot))) {
 
       char *mem = kalloc();  // Allocate a physical memory frame
       //memset(mem, 0, PGSIZE);
@@ -99,10 +104,10 @@ usertrap(void)
         //release(&p->lock);
         return;
       }
-	//virtual_page = PGROUNDDOWN(faulting_addr);
+	
 
       // Install the page table mapping
-   // if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0)
+  
 if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
     kfree(mem);
     printf("Failed to map pages\n");
@@ -122,7 +127,6 @@ if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PT
     //return;
     }
     //return;
-    }
     //return;
   } else if ((which_dev = devintr()) != 0) {
     // ok
