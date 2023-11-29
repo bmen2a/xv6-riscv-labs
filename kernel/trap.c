@@ -38,7 +38,8 @@ void
 usertrap(void)
 {
   int which_dev = 0;
-  int newsz = myproc()->sz;
+  
+  
 
   if ((r_sstatus() & SSTATUS_SPP) != 0)
     panic("usertrap: not from user mode");
@@ -47,7 +48,10 @@ usertrap(void)
   // since we're now in the kernel.
   w_stvec((uint64)kernelvec);
 
+   // Handle load or store fault
+      // Calculate the virtual page address containing the faulting address
   struct proc *p = myproc();
+ // int newsz = p->sz;
   p->cputime++;   // Modified for HW2
   // save user program counter.
   p->trapframe->epc = r_sepc();
@@ -73,61 +77,57 @@ usertrap(void)
     // newly allocated physical frame addr obtained from kalloc(),
     // PERMISSIONS R/W/X/U)
   }else if (r_scause() == 13 || r_scause() == 15) {
-    if (r_stval() >= newsz) {
-    	 // Invalid address, handle the error
+    uint64 faulting_addr = r_stval();
+    uint64 virtual_page = PGROUNDDOWN(faulting_addr);
+
+    if (virtual_page >= p->sz) {
+        // Invalid address, handle the error
         printf("Invalid address\n");
         p->killed = 1;
         exit(-1);
     }
-      // Handle load or store fault
-      // Calculate the virtual page address containing the faulting address
-      uint64 faulting_addr = r_stval();
-      uint64 virtual_page = PGROUNDDOWN(faulting_addr);
 
-      // Acquire the process lock before accessing proc struct fields
-      //acquire(&p->lock);
-      for (int i = 0; i < MAX_MMR; i++) {
-	struct mmr  *region = &p->mmr[i];
-	
-	if (region->valid && virtual_page >= region->addr  && virtual_page < (region->addr + region-> length)) {
-	          if ((r_scause() == 13 && (region->flags & region->prot)) || (r_scause() == 15 && (region->flags  & region->prot))) {
+    int found = 0;
 
-      char *mem = kalloc();  // Allocate a physical memory frame
-      //memset(mem, 0, PGSIZE);
-      if (mem == 0) {
-        // Handle allocation failure, e.g., by returning an error or killing the process
-        printf("Out of physical memory\n");
+    for (int i = 0; i < MAX_MMR; i++) {
+        struct mmr *region = &p->mmr[i];
+
+        if (region->valid && virtual_page >= region->addr && virtual_page < (region->addr + region->length)) {
+            if ((r_scause() == 13 && (region->prot & PTE_U)) || (r_scause() == 15 && (region->prot & PTE_W))) {
+                char *mem = kalloc();  // Allocate a physical memory frame
+
+                if (mem == 0) {
+                    // Handle allocation failure, e.g., by returning an error or killing the process
+                    printf("Out of physical memory\n");
+                    p->killed = 1;
+                    exit(-1);
+                }
+
+                // Install the page table mapping
+                if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
+                    kfree(mem);
+                    printf("Failed to map pages\n");
+                    p->killed = 1;
+                    exit(-1);
+                }
+
+                found = 1;  // Set found flag
+                break;      // Break out of the loop
+            } else {
+                printf("Invalid permissions\n");
+                p->killed = 1;
+                exit(-1);
+            }
         
+    }
+
+    if (!found) {
+        printf("Address not found in mmr table\n");
         p->killed = 1;
-
-        // Release the process lock before exiting
-        //release(&p->lock);
         exit(-1);
-      }
-	
-
-      // Install the page table mapping
-  
-if (mappages(p->pagetable, virtual_page, PGSIZE, (uint64)mem, PTE_R | PTE_W | PTE_X | PTE_U) < 0) {
-    kfree(mem);
-    printf("Failed to map pages\n");
-    p->killed = 1;
-        exit(-1);
+    }
 }
-
-} else{
-	printf("Invalid permissions\n");
-            p->killed = 1;
-        exit(-1);
-		}
-      // Release the process lock
-      //release(&p->lock);
-      //return;
-    }
-    //return;
-    }
-    //return;
-    //return;
+ //return;
   } else if ((which_dev = devintr()) != 0) {
     // ok
     // Release the process lock
