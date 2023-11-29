@@ -134,8 +134,6 @@ sys_munmap(void)
 
     // Call munmap helper function
     int result = munmap(addr, length);
-        printf("sys_munmap: addr=%p, length=%p\n", addr, length);
-
     return result;
 }
 

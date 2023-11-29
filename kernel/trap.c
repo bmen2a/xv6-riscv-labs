@@ -81,12 +81,6 @@ usertrap(void)
     uint64 virtual_page = PGROUNDDOWN(faulting_addr);
 
     if (virtual_page >= p->sz) {
-        // Invalid address, handle the error
-        printf("Invalid address\n");
-        p->killed = 1;
-        exit(-1);
-    }
-
     int found = 0;
 
     for (int i = 0; i < MAX_MMR; i++) {
@@ -94,7 +88,20 @@ usertrap(void)
 
         if (region->valid && virtual_page >= region->addr && virtual_page < (region->addr + region->length)) {
             if ((r_scause() == 13 && (region->prot & PTE_U)) || (r_scause() == 15 && (region->prot & PTE_W))) {
-                char *mem = kalloc();  // Allocate a physical memory frame
+                
+                found = 1;  // Set found flag
+                break;      // Break out of the loop
+            } 
+    }
+
+    if (!found) {
+        printf("Address not found in mmr table: %p\n", virtual_page);
+        p->killed = 1;
+        exit(-1);
+    }
+    }
+}
+char *mem = kalloc();  // Allocate a physical memory frame
 
                 if (mem == 0) {
                     // Handle allocation failure, e.g., by returning an error or killing the process
@@ -110,23 +117,6 @@ usertrap(void)
                     p->killed = 1;
                     exit(-1);
                 }
-
-                found = 1;  // Set found flag
-                break;      // Break out of the loop
-            } else {
-                printf("Invalid permissions\n");
-                p->killed = 1;
-                exit(-1);
-            }
-        
-    }
-
-    if (!found) {
-        printf("Address not found in mmr table\n");
-        p->killed = 1;
-        exit(-1);
-    }
-}
  //return;
   } else if ((which_dev = devintr()) != 0) {
     // ok

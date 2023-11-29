@@ -327,33 +327,107 @@ uvmfree(pagetable_t pagetable, uint64 sz)
 // returns 0 on success, -1 on failure.
 // frees any allocated pages on failure.
 int
-uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
+
+uvmcopy(pagetable_t old, pagetable_t new, uint64 start, uint64 end)
+
 {
-  pte_t *pte;
-  uint64 pa, i;
-  uint flags;
-  char *mem;
 
-  for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walk(old, i, 0)) == 0)
-     panic("uvmcopy: pte should exist");
-    if((*pte & PTE_V) == 0)
-    	panic("uvmcopy: page not present");
-   pa = PTE2PA(*pte);
-   flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
-      kfree(mem);
-      goto err;
-    }
-  }
-  return 0;
+pte_t *pte;
 
- err:
-  uvmunmap(new, 0, i / PGSIZE, 1);
-  return -1;
+uint64 pa, i;
+
+uint flags;
+
+char *mem;
+
+for(i = start; i < end; i += PGSIZE){
+
+if((pte = walk(old, i, 0)) == 0)
+
+panic("uvmcopy: pte should exist");
+
+if((*pte & PTE_V) == 0)
+
+panic("uvmcopy: page not present");
+
+pa = PTE2PA(*pte);
+
+flags = PTE_FLAGS(*pte);
+
+if((mem = kalloc()) == 0)
+
+goto err;
+
+memmove(mem, (char*)pa, PGSIZE);
+
+if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
+
+kfree(mem);
+
+goto err;
+
+}
+
+}
+
+return 0;
+
+err:
+
+uvmunmap(new, 0, i / PGSIZE, 1);
+
+return -1;
+
+}
+
+// Copies the parent process’s page table to the child
+
+// Duplicates the page table mappings so that the physical memory is shared
+
+// Returns 0 on success, -1 on failure
+
+int
+
+uvmcopyshared(pagetable_t old, pagetable_t new, uint64 start, uint64 end)
+
+{
+
+pte_t *pte;
+
+uint64 pa, i;
+
+uint flags;
+
+for(i = start; i < end; i += PGSIZE){
+
+if((pte = walk(old, i, 0)) == 0)
+
+panic("uvmcopy: pte should exist");
+
+if((*pte & PTE_V) == 0)
+
+panic("uvmcopy: page not present");
+
+pa = PTE2PA(*pte);
+
+flags = PTE_FLAGS(*pte);
+
+if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
+
+goto err;
+
+}
+
+}
+
+return 0;
+
+err:
+
+uvmunmap(new, 0, i / PGSIZE, 1);
+
+return -1;
+
 }
 
 // mark a PTE invalid for user access.
