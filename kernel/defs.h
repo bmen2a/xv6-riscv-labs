@@ -113,6 +113,9 @@ struct mmr_list* get_mmr_list(int);
 int alloc_mmr_listid(void);
 void dealloc_mmr_listid(int);
 void mmrlistinit(void);
+void seminit(void);
+int semalloc(void);
+void semdealloc(int);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

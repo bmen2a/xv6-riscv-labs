@@ -43,3 +43,7 @@ entry("getpriority");
 entry("freepmem");
 entry("munmap");
 entry("mmap");
+entry("sem_destroy");
+entry("sem_init");
+entry("sem_wait");
+entry("sem_post");

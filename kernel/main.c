@@ -31,6 +31,8 @@ main()
     userinit();      // first user process
     //Modified for HW5
     mmrlistinit();
+    //Modified for HW6
+    seminit();
     __sync_synchronize();
     started = 1;
   } else {
