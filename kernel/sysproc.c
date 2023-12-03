@@ -167,5 +167,98 @@ uint64 sys_freepmem(void)
   
   return pages*4096;
 }
+//Modified for HW6
+uint64 sys_sem_init(void) {
+    int key;
 
+    if (argint(0, &key) < 0)
+        return -1;
+
+    // Allocate a new semaphore
+    int sem_index = semalloc();
+    if (sem_index < 0)
+        return -1;  // Failed to allocate a semaphore
+
+    // Initialize the semaphore with the provided key
+    acquire(&semtable.lock);
+    semtable.sem[sem_index].count = key;
+    semtable.sem[sem_index].valid = 1;
+    release(&semtable.lock);
+
+    return sem_index;
+}
+
+uint64 sys_sem_destroy(void) {
+    int sem_index;
+
+    if (argint(0, &sem_index) < 0)
+        return -1;
+
+    if (sem_index < 0 || sem_index >= NSEM)
+        return -1;  // Invalid semaphore index
+
+    acquire(&semtable.lock);
+
+    // Release the semaphore if it's valid
+    if (semtable.sem[sem_index].valid) {
+        semtable.sem[sem_index].valid = 0;
+        release(&semtable.lock);
+        semdealloc(sem_index);
+        return 0;
+    }
+
+    release(&semtable.lock);
+    return -1;  // Invalid semaphore or already destroyed
+}
+
+uint64 sys_sem_wait(void) {
+    int sem_index;
+
+    if (argint(0, &sem_index) < 0)
+        return -1;
+
+    if (sem_index < 0 || sem_index >= NSEM)
+        return -1;  // Invalid semaphore index
+
+    acquire(&semtable.lock);
+
+    // Check if the semaphore is valid
+    if (!semtable.sem[sem_index].valid) {
+        release(&semtable.lock);
+        return -1;  // Invalid semaphore
+    }
+
+    while (semtable.sem[sem_index].count <= 0) {
+        sleep(&semtable.sem[sem_index], &semtable.lock);
+    }
+
+    semtable.sem[sem_index].count--;
+    release(&semtable.lock);
+
+    return 0;
+}
+
+uint64 sys_sem_post(void) {
+    int sem_index;
+
+    if (argint(0, &sem_index) < 0)
+        return -1;
+
+    if (sem_index < 0 || sem_index >= NSEM)
+        return -1;  // Invalid semaphore index
+
+    acquire(&semtable.lock);
+
+    // Check if the semaphore is valid
+    if (!semtable.sem[sem_index].valid) {
+        release(&semtable.lock);
+        return -1;  // Invalid semaphore
+    }
+
+    semtable.sem[sem_index].count++;
+    wakeup(&semtable.sem[sem_index]);  // Wake up any waiting processes
+    release(&semtable.lock);
+
+    return 0;
+}
 

@@ -33,6 +33,8 @@ main()
     mmrlistinit();
     //Modified for HW6
     seminit();
+   // semalloc();
+   // semdealloc();
     __sync_synchronize();
     started = 1;
   } else {
