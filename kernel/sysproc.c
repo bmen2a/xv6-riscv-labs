@@ -213,7 +213,7 @@ uint64 sys_sem_destroy(void) {
 
 uint64 sys_sem_wait(void) {
     int sem_index;
-
+	int total=0;
     if (argint(0, &sem_index) < 0)
         return -1;
 
@@ -228,14 +228,18 @@ uint64 sys_sem_wait(void) {
         return -1;  // Invalid semaphore
     }
 
-    while (semtable.sem[sem_index].count <= 0) {
+    // Decrement the value of the semaphore by one
+    semtable.sem[sem_index].count--;
+
+    while (semtable.sem[sem_index].count < 0) {
+        // Wait if the value of the semaphore is negative
         sleep(&semtable.sem[sem_index], &semtable.lock);
     }
 
-    semtable.sem[sem_index].count--;
+    total++;  // Increment the global total
     release(&semtable.lock);
 
-    return 0;
+    return total;
 }
 
 uint64 sys_sem_post(void) {
@@ -255,10 +259,17 @@ uint64 sys_sem_post(void) {
         return -1;  // Invalid semaphore
     }
 
+    // Increment the value of the semaphore by one
     semtable.sem[sem_index].count++;
-    wakeup(&semtable.sem[sem_index]);  // Wake up any waiting processes
+
+    // Wake up one waiting process if there are any
+    if (semtable.sem[sem_index].count <= 0) {
+        wakeup(&semtable.sem[sem_index]);
+    }
+
     release(&semtable.lock);
 
     return 0;
 }
+
 
