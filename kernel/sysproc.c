@@ -169,6 +169,34 @@ uint64 sys_freepmem(void)
 }
 //Modified for HW6
 uint64 sys_sem_init(void) {
+    uint64 sem_id;
+    uint64 pshared;
+    uint64 value;
+
+    // Use argaddr() to retrieve the semaphore ID
+    if (argaddr(0, &sem_id) < 0 || argaddr(1, &pshared) < 0 || argaddr(2, &value) < 0)
+        return -1;
+
+    if (sem_id < 0 || sem_id >= NSEM || semtable.sem[sem_id].valid)
+        return -1; // Invalid semaphore ID or semaphore already in use
+
+    acquire(&semtable.lock);
+    semtable.sem[sem_id].count = value;
+    semtable.sem[sem_id].valid = 1;
+    release(&semtable.lock);
+
+    // Use copyout to write the sem_id back to user space
+    if (copyout(myproc()->pagetable, argaddr(0, &sem_id), (char *)&sem_id, sizeof(sem_id)) < 0){
+    	copyout(myproc()->pagetable, argaddr(0, &sem_id), (char *)&sem_id, sizeof(sem_id));
+        return -1; // Copyout failed
+        }
+
+    return 0;
+}
+
+
+/*
+uint64 sys_sem_init(void) {
     int key;
 
     if (argint(0, &key) < 0)
@@ -187,7 +215,6 @@ uint64 sys_sem_init(void) {
 
     return sem_index;
 }
-
 uint64 sys_sem_destroy(void) {
     int sem_index;
 
@@ -211,6 +238,66 @@ uint64 sys_sem_destroy(void) {
     return -1;  // Invalid semaphore or already destroyed
 }
 
+*/
+
+
+uint64 sys_sem_destroy(void) {
+    uint64 sem_addr;
+
+    // Use argaddr() to retrieve the semaphore address
+    if (argaddr(0, &sem_addr) < 0)
+        return -1;
+
+    int sem_index;
+
+    // Use copyin to safely get the sem_index from user space
+    if (copyin(myproc()->pagetable, (char *)&sem_index, sem_addr, sizeof(sem_index)) < 0){
+        copyin(myproc()->pagetable, (char *)&sem_index, sem_addr, sizeof(sem_index));
+        return -1;
+        }
+
+    if (sem_index < 0 || sem_index >= NSEM || !semtable.sem[sem_index].valid)
+        return -1; // Invalid semaphore index or semaphore not in use
+
+    semdealloc(sem_index);
+    acquire(&semtable.lock);
+    release(&semtable.lock);
+
+    return 0;
+}
+
+uint64 sys_sem_wait(void) {
+    uint64 sem_addr;
+
+    // Use argaddr() to retrieve the semaphore address
+    if (argaddr(0, &sem_addr) < 0)
+        return -1;
+
+    int sem_index;
+
+    // Use copyin to safely get the sem_index from user space
+    if (copyin(myproc()->pagetable, (char *)&sem_index, sem_addr, sizeof(sem_index)) < 0){
+        copyin(myproc()->pagetable, (char *)&sem_index, sem_addr, sizeof(sem_index));
+        return -1;
+        }
+
+    if (sem_index < 0 || sem_index >= NSEM || !semtable.sem[sem_index].valid)
+        return -1; // Invalid semaphore index or semaphore not in use
+
+    acquire(&semtable.sem[sem_index].lock);
+
+    while (semtable.sem[sem_index].count <= 0) {
+        sleep(&semtable.sem[sem_index], &semtable.sem[sem_index].lock);
+    }
+
+    semtable.sem[sem_index].count--;
+    release(&semtable.sem[sem_index].lock);
+
+    return 0;
+}
+
+
+/**
 uint64 sys_sem_wait(void) {
     int sem_index;
 	int total=0;
@@ -241,7 +328,6 @@ uint64 sys_sem_wait(void) {
 
     return total;
 }
-
 uint64 sys_sem_post(void) {
     int sem_index;
 
@@ -271,5 +357,39 @@ uint64 sys_sem_post(void) {
 
     return 0;
 }
+
+*/
+
+uint64 sys_sem_post(void) {
+    uint64 sem_id;
+
+    if (argaddr(0, &sem_id) < 0)
+        return -1;
+
+    if (sem_id < 0 || sem_id >= NSEM || !semtable.sem[sem_id].valid)
+        return -1; // Invalid semaphore ID or semaphore not in use
+
+    acquire(&semtable.sem[sem_id].lock);
+
+    semtable.sem[sem_id].count++;
+
+    // Use copyin to access the user's sem_t value
+    uint64 sem_t_value;
+    if (copyin(myproc()->pagetable, (char *)&sem_t_value, argaddr(0, &sem_id), sizeof(sem_t_value)) < 0) {
+    copyin(myproc()->pagetable, (char *)&sem_t_value, argaddr(0, &sem_id), sizeof(sem_t_value));
+        release(&semtable.sem[sem_id].lock);
+        return -1; // Copyin failed
+    }
+
+    // Wake up waiting processes
+    while (sem_t_value-- > 0) {
+        wakeup(&semtable.sem[sem_id]);
+    }
+
+    release(&semtable.sem[sem_id].lock);
+
+    return 0;
+}
+
 
 

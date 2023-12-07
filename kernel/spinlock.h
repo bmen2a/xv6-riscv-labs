@@ -1,7 +1,7 @@
 // Mutual exclusion lock.
 
 //extern NSEM;
-#define MAX_SEMAPHORES 100  // maximum open semaphores per system
+
 struct spinlock {
   uint locked;       // Is the lock held?
 
@@ -18,6 +18,6 @@ int    valid;// 1 if this entry is in use
 // OS semaphore tabletype
 struct semtab {
 struct spinlock lock;
-struct semaphore sem[MAX_SEMAPHORES];
+struct semaphore sem[NSEM];
 };
 extern struct semtab semtable;
