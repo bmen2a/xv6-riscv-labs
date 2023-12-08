@@ -172,7 +172,12 @@ uint64 sys_sem_init(void) {
     uint64 sem_id;
     uint64 pshared;
     uint64 value;
-
+	
+	 // Use semalloc to retrieve an available semaphore index
+    sem_id = semalloc();
+    if (sem_id< 0)
+        return -1;  // Failed to allocate a semaphore
+        
     // Use argaddr() to retrieve the semaphore ID
     if (argaddr(0, &sem_id) < 0 || argaddr(1, &pshared) < 0 || argaddr(2, &value) < 0)
         return -1;
@@ -206,20 +211,29 @@ uint64 sys_sem_destroy(void) {
     int sem_index;
 
     // Use copyin to safely get the sem_index from user space
-    if (copyin(myproc()->pagetable, (char *)&sem_index, sem_addr, sizeof(sem_index)) < 0){
-        copyin(myproc()->pagetable, (char *)&sem_index, sem_addr, sizeof(sem_index));
+    if (copyin(myproc()->pagetable, (char *)&sem_index, sem_addr, sizeof(sem_index)) < 0)
         return -1;
-        }
 
-    if (sem_index < 0 || sem_index >= NSEM || !semtable.sem[sem_index].valid)
-        return -1; // Invalid semaphore index or semaphore not in use
+    if (sem_index < 0 || sem_index >= NSEM)
+        return -1; // Invalid semaphore index
 
-    semdealloc(sem_index);
     acquire(&semtable.lock);
+
+    // Check if the semaphore is valid
+    if (!semtable.sem[sem_index].valid) {
+        release(&semtable.lock);
+        return -1;  // Invalid semaphore or already destroyed
+    }
+
+    // Release the semaphore if it's valid
+    semtable.sem[sem_index].valid = 0;
+    semdealloc(sem_index);
+    
     release(&semtable.lock);
 
     return 0;
 }
+
 
 uint64 sys_sem_wait(void) {
     uint64 sem_addr;
@@ -262,18 +276,19 @@ uint64 sys_sem_post(void) {
 
     acquire(&semtable.sem[sem_id].lock);
 
+    // Increment the value of the semaphore by one
     semtable.sem[sem_id].count++;
 
     // Use copyin to access the user's sem_t value
     uint64 sem_t_value;
     if (copyin(myproc()->pagetable, (char *)&sem_t_value, argaddr(0, &sem_id), sizeof(sem_t_value)) < 0) {
-    copyin(myproc()->pagetable, (char *)&sem_t_value, argaddr(0, &sem_id), sizeof(sem_t_value));
+        copyin(myproc()->pagetable, (char *)&sem_t_value, argaddr(0, &sem_id), sizeof(sem_t_value));
         release(&semtable.sem[sem_id].lock);
         return -1; // Copyin failed
     }
 
     // Wake up waiting processes
-    while (sem_t_value-- > 0) {
+    if (sem_t_value > 0) {
         wakeup(&semtable.sem[sem_id]);
     }
 
@@ -281,6 +296,7 @@ uint64 sys_sem_post(void) {
 
     return 0;
 }
+
 
 
 
